@@ -425,11 +425,82 @@ export default {
     if (url.pathname === "/telegram/webhook" && request.method === "POST") {
       const update = await request.json();
 
-      console.log("Telegram update:", update);
+      const message = update.message;
 
-      return Response.json({
-        ok: true,
-      });
+      if (!message?.text) {
+        return Response.json({ ok: true });
+      }
+
+      const chatId = message.chat.id;
+      const text = message.text;
+
+      const parsed = messageRouter(text);
+
+      if (!parsed.success) {
+        await sendTelegramMessage(
+          env.TELEGRAM_BOT_TOKEN,
+          chatId,
+          "❓ " + parsed.error
+        );
+
+        return Response.json({ ok: true });
+      }
+
+      try {
+        if (parsed.intent === "BALANCE") {
+          const totalBalance = await getTotalBalance(
+            env.finance_db,
+            1
+          );
+
+          const response = formatBalanceResponse({
+            intent: parsed.intent,
+            totalBalance,
+          });
+
+          await sendTelegramMessage(
+            env.TELEGRAM_BOT_TOKEN,
+            chatId,
+            response
+          );
+
+          return Response.json({ ok: true });
+        }
+
+        if (parsed.intent === "BALANCE_ACCOUNT") {
+          const balances = await getBalance(
+            env.finance_db,
+            1,
+            parsed.accountName
+          );
+
+          const response = formatBalanceResponse({
+            intent: parsed.intent,
+            accountName: parsed.accountName,
+            balances,
+          });
+
+          await sendTelegramMessage(
+            env.TELEGRAM_BOT_TOKEN,
+            chatId,
+            response
+          );
+
+          return Response.json({ ok: true });
+        }
+
+        return Response.json({ ok: true });
+      } catch (error) {
+        console.error(error);
+
+        await sendTelegramMessage(
+          env.TELEGRAM_BOT_TOKEN,
+          chatId,
+          "❌ Terjadi error saat memproses pesan."
+        );
+
+        return Response.json({ ok: true });
+      }
     }
 
     return new Response("Finance Bot API");
