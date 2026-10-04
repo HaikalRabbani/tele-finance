@@ -14,6 +14,11 @@ import {
   parseQuery,
 } from "./parser.js";
 
+import {
+  formatRupiah,
+  formatBalanceResponse,
+} from "./formatter.js";
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -291,10 +296,14 @@ export default {
             1
           );
 
+          const response = formatBalanceResponse({
+            intent: parsed.intent,
+            totalBalance,
+          });
+
           return Response.json({
             success: true,
-            parsed,
-            totalBalance,
+            message: response,
           });
         }
 
@@ -304,10 +313,15 @@ export default {
           parsed.accountName
         );
 
+        const response = formatBalanceResponse({
+          intent: parsed.intent,
+          accountName: parsed.accountName,
+          balances,
+        });
+
         return Response.json({
           success: true,
-          parsed,
-          balances,
+          message: response,
         });
       } catch (error) {
         return Response.json(
@@ -318,6 +332,17 @@ export default {
           { status: 400 }
         );
       }
+    }
+
+    if (url.pathname === "/test/format") {
+      const amount = Number(
+        url.searchParams.get("amount") || 9045000
+      );
+
+      return Response.json({
+        raw: amount,
+        formatted: formatRupiah(amount),
+      });
     }
 
     return new Response("Finance Bot API");
