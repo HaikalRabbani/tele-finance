@@ -285,10 +285,23 @@ export default {
       }
 
       try {
+        if (parsed.intent === "BALANCE") {
+          const totalBalance = await getTotalBalance(
+            env.finance_db,
+            1
+          );
+
+          return Response.json({
+            success: true,
+            parsed,
+            totalBalance,
+          });
+        }
+
         const balances = await getBalance(
           env.finance_db,
           1,
-          parsed.accountName || null
+          parsed.accountName
         );
 
         return Response.json({
