@@ -422,31 +422,39 @@ export default {
       });
     }
 
+
     if (url.pathname === "/telegram/webhook" && request.method === "POST") {
-      const update = await request.json();
-
-      const message = update.message;
-
-      if (!message?.text) {
-        return Response.json({ ok: true });
-      }
-
-      const chatId = message.chat.id;
-      const text = message.text;
-
-      const parsed = messageRouter(text);
-
-      if (!parsed.success) {
-        await sendTelegramMessage(
-          env.TELEGRAM_BOT_TOKEN,
-          chatId,
-          "❓ " + parsed.error
-        );
-
-        return Response.json({ ok: true });
-      }
-
       try {
+        const update = await request.json();
+
+        const message = update.message;
+
+        if (!message?.text) {
+          return Response.json({ ok: true });
+        }
+
+        const chatId = message.chat.id;
+        const text = message.text;
+
+        console.log("Telegram message:", text);
+
+        const parsed = messageRouter(text);
+
+        console.log("Parsed:", parsed);
+
+        if (!parsed.success) {
+          await sendTelegramMessage(
+            env.TELEGRAM_BOT_TOKEN,
+            chatId,
+            "❓ " + parsed.error
+          );
+
+          return Response.json({ ok: true });
+        }
+
+        // =========================
+        // BALANCE TOTAL
+        // =========================
         if (parsed.intent === "BALANCE") {
           const totalBalance = await getTotalBalance(
             env.finance_db,
@@ -467,6 +475,9 @@ export default {
           return Response.json({ ok: true });
         }
 
+        // =========================
+        // BALANCE ACCOUNT
+        // =========================
         if (parsed.intent === "BALANCE_ACCOUNT") {
           const balances = await getBalance(
             env.finance_db,
@@ -489,19 +500,155 @@ export default {
           return Response.json({ ok: true });
         }
 
-        return Response.json({ ok: true });
-      } catch (error) {
-        console.error(error);
+        // =========================
+        // EXPENSE
+        // =========================
+        if (parsed.intent === "EXPENSE") {
+          await createExpense(env.finance_db, {
+            userId: 1,
+            accountName: parsed.accountName,
+            amount: parsed.amount,
+            categoryName: parsed.categoryName,
+            description: parsed.description,
+          });
 
+          const balances = await getBalance(
+            env.finance_db,
+            1,
+            parsed.accountName
+          );
+
+          const account = balances[0];
+
+          await sendTelegramMessage(
+            env.TELEGRAM_BOT_TOKEN,
+            chatId,
+            `✅ Tercatat: ${parsed.description} — ${formatRupiah(
+              parsed.amount
+            )} dari ${account.name}\n💰 Saldo ${
+              account.name
+            }: ${formatRupiah(account.balance)}`
+          );
+
+          return Response.json({ ok: true });
+        }
+
+        // =========================
+        // INCOME
+        // =========================
+        if (parsed.intent === "INCOME") {
+          await createIncome(env.finance_db, {
+            userId: 1,
+            accountName: parsed.accountName,
+            amount: parsed.amount,
+            categoryName: parsed.categoryName,
+            description: parsed.description,
+          });
+
+          const balances = await getBalance(
+            env.finance_db,
+            1,
+            parsed.accountName
+          );
+
+          const account = balances[0];
+
+          await sendTelegramMessage(
+            env.TELEGRAM_BOT_TOKEN,
+            chatId,
+            `✅ Pemasukan tercatat: ${parsed.description} — ${formatRupiah(
+              parsed.amount
+            )} masuk ke ${account.name}\n💰 Saldo ${
+              account.name
+            }: ${formatRupiah(account.balance)}`
+          );
+
+          return Response.json({ ok: true });
+        }
+
+        // =========================
+        // TRANSFER
+        // =========================
+        if (parsed.intent === "TRANSFER") {
+          await createTransfer(env.finance_db, {
+            userId: 1,
+            fromAccountName: parsed.fromAccountName,
+            toAccountName: parsed.toAccountName,
+            amount: parsed.amount,
+            description: parsed.description,
+          });
+
+          const balances = await getBalance(
+            env.finance_db,
+            1
+          );
+
+          const fromAccount = balances.find(
+            (account) =>
+              account.name.toLowerCase() ===
+              parsed.fromAccountName.toLowerCase()
+          );
+
+          const toAccount = balances.find(
+            (account) =>
+              account.name.toLowerCase() ===
+              parsed.toAccountName.toLowerCase()
+          );
+
+          await sendTelegramMessage(
+            env.TELEGRAM_BOT_TOKEN,
+            chatId,
+            `✅ Transfer tercatat\n` +
+            `${fromAccount.name} → ${toAccount.name}\n` +
+            `💸 ${formatRupiah(parsed.amount)}\n\n` +
+            `💰 Saldo ${fromAccount.name}: ${formatRupiah(
+              fromAccount.balance
+            )}\n` +
+            `💰 Saldo ${toAccount.name}: ${formatRupiah(
+              toAccount.balance
+            )}`
+          );
+
+          return Response.json({ ok: true });
+        }
+
+        // =========================
+        // UNKNOWN INTENT
+        // =========================
         await sendTelegramMessage(
           env.TELEGRAM_BOT_TOKEN,
           chatId,
-          "❌ Terjadi error saat memproses pesan."
+          "❓ Intent belum memiliki handler."
         );
+
+        return Response.json({ ok: true });
+
+      } catch (error) {
+        console.error("Webhook error:", error);
+
+        try {
+          const update = await request.clone().json();
+          const chatId = update.message?.chat?.id;
+
+          if (chatId) {
+            await sendTelegramMessage(
+              env.TELEGRAM_BOT_TOKEN,
+              chatId,
+              "❌ Terjadi error saat memproses pesan."
+            );
+          }
+        } catch (telegramError) {
+          console.error(
+            "Failed to send error message:",
+            telegramError
+          );
+        }
 
         return Response.json({ ok: true });
       }
     }
+
+
 
     return new Response("Finance Bot API");
   },
