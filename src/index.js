@@ -422,6 +422,16 @@ export default {
       });
     }
 
+    if (url.pathname === "/telegram/webhook" && request.method === "POST") {
+      const update = await request.json();
+
+      console.log("Telegram update:", update);
+
+      return Response.json({
+        ok: true,
+      });
+    }
+
     return new Response("Finance Bot API");
   },
 };
