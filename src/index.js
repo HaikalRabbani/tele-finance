@@ -385,6 +385,43 @@ export default {
       }
     }
 
+    if (url.pathname === "/test/update") {
+      const response = await fetch(
+        `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/getUpdates`
+      );
+
+      const data = await response.json();
+
+      return Response.json(data);
+    }
+
+    if (url.pathname === "/test/token") {
+      return Response.json({
+        hasToken: !!env.TELEGRAM_BOT_TOKEN,
+      });
+    }
+
+    if (url.pathname === "/test/me") {
+      const response = await fetch(
+        `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/getMe`
+      );
+
+      const data = await response.json();
+
+      return Response.json(data);
+    }
+
+    if (url.pathname === "/test/token-info") {
+      const token = env.TELEGRAM_BOT_TOKEN || "";
+
+      return Response.json({
+        exists: !!token,
+        length: token.length,
+        hasColon: token.includes(":"),
+        prefix: token.split(":")[0],
+      });
+    }
+
     return new Response("Finance Bot API");
   },
 };
