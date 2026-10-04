@@ -19,6 +19,8 @@ import {
   formatBalanceResponse,
 } from "./formatter.js";
 
+import { sendTelegramMessage } from "./telegram.js";
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -343,6 +345,44 @@ export default {
         raw: amount,
         formatted: formatRupiah(amount),
       });
+    }
+
+    if (url.pathname === "/test/telegram") {
+      const chatId = url.searchParams.get("chatId");
+      const message =
+        url.searchParams.get("message") ||
+        "Test dari Finance Bot";
+
+      if (!chatId) {
+        return Response.json(
+          {
+            success: false,
+            error: "chatId wajib diisi",
+          },
+          { status: 400 }
+        );
+      }
+
+      try {
+        const result = await sendTelegramMessage(
+          env.TELEGRAM_BOT_TOKEN,
+          chatId,
+          message
+        );
+
+        return Response.json({
+          success: true,
+          telegram: result,
+        });
+      } catch (error) {
+        return Response.json(
+          {
+            success: false,
+            error: error.message,
+          },
+          { status: 400 }
+        );
+      }
     }
 
     return new Response("Finance Bot API");
