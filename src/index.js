@@ -3,13 +3,15 @@ import {
   createExpense,
   createIncome,
   createTransfer,
+  getTotalBalance,
 } from "./finance.js";
 
 import {
   parseExpense,
   parseIncome,
   parseTransfer,
-  messageRouter
+  messageRouter,
+  parseQuery,
 } from "./parser.js";
 
 export default {
@@ -259,6 +261,50 @@ export default {
       const result = messageRouter(message);
 
       return Response.json(result);
+    }
+
+    if (url.pathname === "/test/parser-query") {
+      const message =
+        url.searchParams.get("message") ||
+        "saldo gw berapa?";
+
+      const result = parseQuery(message);
+
+      return Response.json(result);
+    }
+
+    if (url.pathname === "/test/query") {
+      const message =
+        url.searchParams.get("message") ||
+        "saldo gw berapa?";
+
+      const parsed = parseQuery(message);
+
+      if (!parsed.success) {
+        return Response.json(parsed, { status: 400 });
+      }
+
+      try {
+        const balances = await getBalance(
+          env.finance_db,
+          1,
+          parsed.accountName || null
+        );
+
+        return Response.json({
+          success: true,
+          parsed,
+          balances,
+        });
+      } catch (error) {
+        return Response.json(
+          {
+            success: false,
+            error: error.message,
+          },
+          { status: 400 }
+        );
+      }
     }
 
     return new Response("Finance Bot API");

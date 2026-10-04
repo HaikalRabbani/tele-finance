@@ -340,3 +340,19 @@ export async function createTransfer(db, {
   };
 }
 
+export async function getTotalBalance(db, userId) {
+  const result = await db
+    .prepare(`
+      SELECT
+        COALESCE(SUM(te.amount), 0) AS total_balance
+      FROM accounts a
+      LEFT JOIN transaction_entries te
+        ON te.account_id = a.id
+      WHERE a.user_id = ?
+        AND a.is_active = 1
+    `)
+    .bind(userId)
+    .first();
+
+  return result.total_balance;
+}

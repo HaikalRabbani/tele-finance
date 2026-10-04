@@ -352,6 +352,17 @@ export function messageRouter(message) {
   }
 
   // =========================
+  // QUERY
+  // =========================
+
+  if (
+    /\b(saldo|balance)\b/i.test(text) ||
+    /\b(yang|punya)\b.*\b(jago|seabank|dana)\b/i.test(text)
+  ) {
+    return parseQuery(message);
+  }
+
+  // =========================
   // TRANSFER
   // =========================
 
@@ -390,5 +401,86 @@ export function messageRouter(message) {
     success: false,
     intent: "UNKNOWN",
     error: "Saya belum mengerti pesan tersebut",
+  };
+}
+
+export function parseQuery(message) {
+  const text = message.trim();
+
+  if (!text) {
+    return {
+      success: false,
+      error: "Pesan kosong",
+    };
+  }
+
+  // =========================
+  // ACCOUNT
+  // =========================
+
+  const accountPatterns = [
+    {
+      name: "Jago",
+      regex: /\b(?:jago|bank jago)\b/i,
+    },
+    {
+      name: "SeaBank",
+      regex: /\b(?:seabank|sea bank)\b/i,
+    },
+    {
+      name: "DANA",
+      regex: /\b(?:dana)\b/i,
+    },
+  ];
+
+  let accountName = null;
+
+  for (const account of accountPatterns) {
+    if (account.regex.test(text)) {
+      accountName = account.name;
+      break;
+    }
+  }
+
+  // =========================
+  // BALANCE QUERY
+  // =========================
+
+  if (
+    /\b(saldo|balance)\b/i.test(text)
+  ) {
+    if (accountName) {
+      return {
+        success: true,
+        intent: "BALANCE_ACCOUNT",
+        accountName,
+      };
+    }
+
+    return {
+      success: true,
+      intent: "BALANCE",
+    };
+  }
+
+  // =========================
+  // SIMPLE ACCOUNT QUERY
+  // =========================
+
+  if (
+    accountName &&
+    /\b(yang|punya|di|berapa)\b/i.test(text)
+  ) {
+    return {
+      success: true,
+      intent: "BALANCE_ACCOUNT",
+      accountName,
+    };
+  }
+
+  return {
+    success: false,
+    intent: "UNKNOWN_QUERY",
+    error: "Query belum dikenali",
   };
 }
