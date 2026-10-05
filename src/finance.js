@@ -356,3 +356,44 @@ export async function getTotalBalance(db, userId) {
 
   return result.total_balance;
 }
+
+export async function getOrCreateUser(db, telegramUserId, name = null) {
+  const existingUser = await db
+    .prepare(`
+      SELECT
+        id,
+        telegram_user_id,
+        name
+      FROM users
+      WHERE telegram_user_id = ?
+    `)
+    .bind(String(telegramUserId))
+    .first();
+
+  if (existingUser) {
+    return existingUser;
+  }
+
+  const result = await db
+    .prepare(`
+      INSERT INTO users (
+        telegram_user_id,
+        name
+      )
+      VALUES (?, ?)
+    `)
+    .bind(String(telegramUserId), name)
+    .run();
+
+  return await db
+    .prepare(`
+      SELECT
+        id,
+        telegram_user_id,
+        name
+      FROM users
+      WHERE id = ?
+    `)
+    .bind(result.meta.last_row_id)
+    .first();
+}
