@@ -5,6 +5,9 @@ import {
   createTransfer,
   getTotalBalance,
   getOrCreateUser,
+  getConversationState,
+  setConversationState,
+  clearConversationState,
 } from "./finance.js";
 
 import {
@@ -107,15 +110,18 @@ export default {
     // =========================================================
 
     if (url.pathname === "/test/total") {
-      const totalBalance = await getTotalBalance(
-        env.finance_db,
-        1
-      );
+      const totalBalance =
+        await getTotalBalance(
+          env.finance_db,
+          1
+        );
 
       return Response.json({
         success: true,
         totalBalance,
-        formatted: formatRupiah(totalBalance),
+        formatted: formatRupiah(
+          totalBalance
+        ),
       });
     }
 
@@ -125,16 +131,17 @@ export default {
     // =========================================================
 
     if (url.pathname === "/test/expense") {
-      const result = await createExpense(
-        env.finance_db,
-        {
-          userId: 1,
-          accountName: "Jago",
-          amount: 25000,
-          categoryName: "Food",
-          description: "Test expense",
-        }
-      );
+      const result =
+        await createExpense(
+          env.finance_db,
+          {
+            userId: 1,
+            accountName: "Jago",
+            amount: 25000,
+            categoryName: "Food",
+            description: "Test expense",
+          }
+        );
 
       return Response.json({
         success: true,
@@ -148,16 +155,17 @@ export default {
     // =========================================================
 
     if (url.pathname === "/test/income") {
-      const result = await createIncome(
-        env.finance_db,
-        {
-          userId: 1,
-          accountName: "SeaBank",
-          amount: 1000000,
-          categoryName: "Salary",
-          description: "Test income",
-        }
-      );
+      const result =
+        await createIncome(
+          env.finance_db,
+          {
+            userId: 1,
+            accountName: "SeaBank",
+            amount: 1000000,
+            categoryName: "Salary",
+            description: "Test income",
+          }
+        );
 
       return Response.json({
         success: true,
@@ -171,16 +179,17 @@ export default {
     // =========================================================
 
     if (url.pathname === "/test/transfer") {
-      const result = await createTransfer(
-        env.finance_db,
-        {
-          userId: 1,
-          fromAccountName: "SeaBank",
-          toAccountName: "DANA",
-          amount: 500000,
-          description: "Test transfer",
-        }
-      );
+      const result =
+        await createTransfer(
+          env.finance_db,
+          {
+            userId: 1,
+            fromAccountName: "SeaBank",
+            toAccountName: "DANA",
+            amount: 500000,
+            description: "Test transfer",
+          }
+        );
 
       return Response.json({
         success: true,
@@ -198,7 +207,8 @@ export default {
         url.searchParams.get("message") ||
         "makan nasi padang 25k dari jago";
 
-      const result = parseExpense(message);
+      const result =
+        parseExpense(message);
 
       return Response.json({
         success: true,
@@ -217,7 +227,8 @@ export default {
         url.searchParams.get("message") ||
         "gaji 3jt masuk seabank";
 
-      const result = parseIncome(message);
+      const result =
+        parseIncome(message);
 
       return Response.json({
         success: true,
@@ -231,12 +242,16 @@ export default {
     // TEST PARSER TRANSFER
     // =========================================================
 
-    if (url.pathname === "/test/parser-transfer") {
+    if (
+      url.pathname ===
+      "/test/parser-transfer"
+    ) {
       const message =
         url.searchParams.get("message") ||
         "transfer 500k dari seabank ke dana";
 
-      const result = parseTransfer(message);
+      const result =
+        parseTransfer(message);
 
       return Response.json({
         success: true,
@@ -255,7 +270,8 @@ export default {
         url.searchParams.get("message") ||
         "makan nasi padang 25k dari jago";
 
-      const result = messageRouter(message);
+      const result =
+        messageRouter(message);
 
       return Response.json({
         success: true,
@@ -269,12 +285,16 @@ export default {
     // TEST QUERY PARSER
     // =========================================================
 
-    if (url.pathname === "/test/parser-query") {
+    if (
+      url.pathname ===
+      "/test/parser-query"
+    ) {
       const message =
         url.searchParams.get("message") ||
         "saldo gw berapa";
 
-      const result = parseQuery(message);
+      const result =
+        parseQuery(message);
 
       return Response.json({
         success: true,
@@ -293,7 +313,8 @@ export default {
         url.searchParams.get("message") ||
         "saldo gw berapa";
 
-      const parsed = parseQuery(message);
+      const parsed =
+        parseQuery(message);
 
       if (!parsed.success) {
         return Response.json({
@@ -324,7 +345,10 @@ export default {
         });
       }
 
-      if (parsed.intent === "BALANCE_ACCOUNT") {
+      if (
+        parsed.intent ===
+        "BALANCE_ACCOUNT"
+      ) {
         const balances =
           await getBalance(
             env.finance_db,
@@ -335,7 +359,8 @@ export default {
         const response =
           formatBalanceResponse({
             intent: parsed.intent,
-            accountName: parsed.accountName,
+            accountName:
+              parsed.accountName,
             balances,
           });
 
@@ -365,7 +390,8 @@ export default {
         url.searchParams.get("message") ||
         "makan nasi padang 25k dari jago";
 
-      const parsed = messageRouter(message);
+      const parsed =
+        messageRouter(message);
 
       if (!parsed.success) {
         return Response.json({
@@ -379,10 +405,14 @@ export default {
           env.finance_db,
           {
             userId: 1,
-            accountName: parsed.accountName,
-            amount: parsed.amount,
-            categoryName: parsed.categoryName,
-            description: parsed.description,
+            accountName:
+              parsed.accountName,
+            amount:
+              parsed.amount,
+            categoryName:
+              parsed.categoryName,
+            description:
+              parsed.description,
           }
         );
 
@@ -393,7 +423,8 @@ export default {
             parsed.accountName
           );
 
-        const account = balances[0];
+        const account =
+          balances[0];
 
         return Response.json({
           success: true,
@@ -401,9 +432,12 @@ export default {
           account,
           response:
             `Tercatat: ${parsed.description} — ` +
-            `${formatRupiah(parsed.amount)} ` +
-            `dari ${account.name}. ` +
-            `Saldo: ${formatRupiah(account.balance)}`,
+            `${formatRupiah(
+              parsed.amount
+            )} dari ${account.name}. ` +
+            `Saldo: ${formatRupiah(
+              account.balance
+            )}`,
         });
       }
 
@@ -418,12 +452,16 @@ export default {
     // TEST MESSAGE INCOME
     // =========================================================
 
-    if (url.pathname === "/test/message-income") {
+    if (
+      url.pathname ===
+      "/test/message-income"
+    ) {
       const message =
         url.searchParams.get("message") ||
         "gaji 3jt masuk seabank";
 
-      const parsed = messageRouter(message);
+      const parsed =
+        messageRouter(message);
 
       if (!parsed.success) {
         return Response.json({
@@ -433,14 +471,27 @@ export default {
       }
 
       if (parsed.intent === "INCOME") {
+        if (!parsed.accountName) {
+          return Response.json({
+            success: true,
+            parsed,
+            message:
+              "Account belum ditentukan",
+          });
+        }
+
         await createIncome(
           env.finance_db,
           {
             userId: 1,
-            accountName: parsed.accountName,
-            amount: parsed.amount,
-            categoryName: parsed.categoryName,
-            description: parsed.description,
+            accountName:
+              parsed.accountName,
+            amount:
+              parsed.amount,
+            categoryName:
+              parsed.categoryName,
+            description:
+              parsed.description,
           }
         );
 
@@ -451,7 +502,8 @@ export default {
             parsed.accountName
           );
 
-        const account = balances[0];
+        const account =
+          balances[0];
 
         return Response.json({
           success: true,
@@ -460,9 +512,12 @@ export default {
           response:
             `Pemasukan tercatat: ` +
             `${parsed.description} — ` +
-            `${formatRupiah(parsed.amount)} ` +
-            `masuk ke ${account.name}. ` +
-            `Saldo: ${formatRupiah(account.balance)}`,
+            `${formatRupiah(
+              parsed.amount
+            )} masuk ke ${account.name}. ` +
+            `Saldo: ${formatRupiah(
+              account.balance
+            )}`,
         });
       }
 
@@ -477,12 +532,16 @@ export default {
     // TEST MESSAGE TRANSFER
     // =========================================================
 
-    if (url.pathname === "/test/message-transfer") {
+    if (
+      url.pathname ===
+      "/test/message-transfer"
+    ) {
       const message =
         url.searchParams.get("message") ||
         "transfer 500k dari seabank ke dana";
 
-      const parsed = messageRouter(message);
+      const parsed =
+        messageRouter(message);
 
       if (!parsed.success) {
         return Response.json({
@@ -500,8 +559,10 @@ export default {
               parsed.fromAccountName,
             toAccountName:
               parsed.toAccountName,
-            amount: parsed.amount,
-            description: parsed.description,
+            amount:
+              parsed.amount,
+            description:
+              parsed.description,
           }
         );
 
@@ -534,7 +595,9 @@ export default {
             `Transfer tercatat: ` +
             `${fromAccount.name} → ` +
             `${toAccount.name}, ` +
-            `${formatRupiah(parsed.amount)}`,
+            `${formatRupiah(
+              parsed.amount
+            )}`,
         });
       }
 
@@ -550,13 +613,16 @@ export default {
     // =========================================================
 
     if (
-      url.pathname === "/telegram/webhook" &&
+      url.pathname ===
+        "/telegram/webhook" &&
       request.method === "POST"
     ) {
       try {
-        const update = await request.json();
+        const update =
+          await request.json();
 
-        const message = update.message;
+        const message =
+          update.message;
 
         if (!message?.text) {
           return Response.json({
@@ -564,8 +630,11 @@ export default {
           });
         }
 
-        const chatId = message.chat.id;
-        const text = message.text;
+        const chatId =
+          message.chat.id;
+
+        const text =
+          message.text;
 
         console.log(
           "Telegram message:",
@@ -584,7 +653,8 @@ export default {
           await getOrCreateUser(
             env.finance_db,
             telegramUserId,
-            message.from?.first_name || null
+            message.from?.first_name ||
+              null
           );
 
         console.log(
@@ -592,11 +662,165 @@ export default {
           user
         );
 
-        const userId = user.id;
+        const userId =
+          user.id;
 
 
         // =====================================================
-        // PARSE MESSAGE
+        // CHECK CONVERSATION STATE
+        // =====================================================
+
+        const conversationState =
+          await getConversationState(
+            env.finance_db,
+            userId
+          );
+
+        console.log(
+          "Conversation state:",
+          conversationState
+        );
+
+
+        // =====================================================
+        // WAITING FOR INCOME ACCOUNT
+        // =====================================================
+
+        if (conversationState) {
+          let payload;
+
+          try {
+            payload =
+              JSON.parse(
+                conversationState.payload
+              );
+          } catch (error) {
+            console.error(
+              "Invalid conversation payload:",
+              error
+            );
+
+            await clearConversationState(
+              env.finance_db,
+              userId
+            );
+
+            await sendTelegramMessage(
+              env.TELEGRAM_BOT_TOKEN,
+              chatId,
+              "❌ Data percakapan rusak. Silakan kirim transaksi lagi."
+            );
+
+            return Response.json({
+              ok: true,
+            });
+          }
+
+
+          if (
+            conversationState.state ===
+            "WAITING_INCOME_ACCOUNT"
+          ) {
+            const accountNameMap = {
+              jago: "Jago",
+              "bank jago": "Jago",
+              seabank: "SeaBank",
+              "sea bank": "SeaBank",
+              dana: "DANA",
+            };
+
+            const normalizedText =
+              text
+                .trim()
+                .toLowerCase();
+
+            const accountName =
+              accountNameMap[
+                normalizedText
+              ];
+
+            if (!accountName) {
+              await sendTelegramMessage(
+                env.TELEGRAM_BOT_TOKEN,
+                chatId,
+                "❓ Akun tidak dikenali.\n\n" +
+                "Pilih salah satu: Jago, SeaBank, atau DANA."
+              );
+
+              return Response.json({
+                ok: true,
+              });
+            }
+
+
+            // =================================================
+            // CREATE INCOME FROM CONTEXT
+            // =================================================
+
+            await createIncome(
+              env.finance_db,
+              {
+                userId,
+                accountName,
+                amount:
+                  payload.amount,
+                categoryName:
+                  payload.categoryName,
+                description:
+                  payload.description,
+              }
+            );
+
+
+            // =================================================
+            // CLEAR CONTEXT
+            // =================================================
+
+            await clearConversationState(
+              env.finance_db,
+              userId
+            );
+
+
+            // =================================================
+            // GET UPDATED BALANCE
+            // =================================================
+
+            const balances =
+              await getBalance(
+                env.finance_db,
+                userId,
+                accountName
+              );
+
+            const account =
+              balances[0];
+
+
+            // =================================================
+            // SEND RESPONSE
+            // =================================================
+
+            await sendTelegramMessage(
+              env.TELEGRAM_BOT_TOKEN,
+              chatId,
+              `✅ Pemasukan tercatat: ${payload.description} — ${formatRupiah(
+                payload.amount
+              )} masuk ke ${account.name}\n` +
+              `💰 Saldo ${account.name}: ${formatRupiah(
+                account.balance
+              )}`
+            );
+
+            return Response.json({
+              ok: true,
+            });
+          }
+        }
+
+
+        // =====================================================
+        // PARSE NORMAL MESSAGE
         // =====================================================
 
         const parsed =
@@ -629,7 +853,10 @@ export default {
         // BALANCE
         // =====================================================
 
-        if (parsed.intent === "BALANCE") {
+        if (
+          parsed.intent ===
+          "BALANCE"
+        ) {
           const totalBalance =
             await getTotalBalance(
               env.finance_db,
@@ -638,7 +865,8 @@ export default {
 
           const response =
             formatBalanceResponse({
-              intent: parsed.intent,
+              intent:
+                parsed.intent,
               totalBalance,
             });
 
@@ -671,7 +899,8 @@ export default {
 
           const response =
             formatBalanceResponse({
-              intent: parsed.intent,
+              intent:
+                parsed.intent,
               accountName:
                 parsed.accountName,
               balances,
@@ -693,7 +922,10 @@ export default {
         // EXPENSE
         // =====================================================
 
-        if (parsed.intent === "EXPENSE") {
+        if (
+          parsed.intent ===
+          "EXPENSE"
+        ) {
           await createExpense(
             env.finance_db,
             {
@@ -740,7 +972,49 @@ export default {
         // INCOME
         // =====================================================
 
-        if (parsed.intent === "INCOME") {
+        if (
+          parsed.intent ===
+          "INCOME"
+        ) {
+
+          // ---------------------------------------------------
+          // ACCOUNT BELUM DITENTUKAN
+          // ---------------------------------------------------
+
+          if (!parsed.accountName) {
+            await setConversationState(
+              env.finance_db,
+              userId,
+              "WAITING_INCOME_ACCOUNT",
+              {
+                amount:
+                  parsed.amount,
+                categoryName:
+                  parsed.categoryName,
+                description:
+                  parsed.description,
+              }
+            );
+
+            await sendTelegramMessage(
+              env.TELEGRAM_BOT_TOKEN,
+              chatId,
+              `💬 Pemasukan ${formatRupiah(
+                parsed.amount
+              )} masuk ke akun mana?\n\n` +
+              `Pilih: Jago, SeaBank, atau DANA`
+            );
+
+            return Response.json({
+              ok: true,
+            });
+          }
+
+
+          // ---------------------------------------------------
+          // ACCOUNT SUDAH DITENTUKAN
+          // ---------------------------------------------------
+
           await createIncome(
             env.finance_db,
             {
@@ -787,7 +1061,10 @@ export default {
         // TRANSFER
         // =====================================================
 
-        if (parsed.intent === "TRANSFER") {
+        if (
+          parsed.intent ===
+          "TRANSFER"
+        ) {
           await createTransfer(
             env.finance_db,
             {
@@ -828,7 +1105,9 @@ export default {
             chatId,
             `✅ Transfer tercatat\n` +
             `${fromAccount.name} → ${toAccount.name}\n` +
-            `💸 ${formatRupiah(parsed.amount)}\n\n` +
+            `💸 ${formatRupiah(
+              parsed.amount
+            )}\n\n` +
             `💰 Saldo ${fromAccount.name}: ${formatRupiah(
               fromAccount.balance
             )}\n` +
@@ -865,7 +1144,9 @@ export default {
 
         try {
           const update =
-            await request.clone().json();
+            await request
+              .clone()
+              .json();
 
           const chatId =
             update.message?.chat?.id;

@@ -22,11 +22,18 @@ export function parseExpense(message) {
 
   const unit = amountMatch[2]?.toLowerCase();
 
-  if (unit === "k" || unit === "rb" || unit === "ribu") {
+  if (
+    unit === "k" ||
+    unit === "rb" ||
+    unit === "ribu"
+  ) {
     amount *= 1000;
   }
 
-  if (unit === "jt" || unit === "juta") {
+  if (
+    unit === "jt" ||
+    unit === "juta"
+  ) {
     amount *= 1000000;
   }
 
@@ -37,9 +44,18 @@ export function parseExpense(message) {
   // =========================
 
   const accountPatterns = [
-    { name: "Jago", regex: /\b(?:jago|bank jago)\b/i },
-    { name: "SeaBank", regex: /\b(?:seabank|sea bank)\b/i },
-    { name: "DANA", regex: /\b(?:dana)\b/i },
+    {
+      name: "Jago",
+      regex: /\b(?:jago|bank jago)\b/i,
+    },
+    {
+      name: "SeaBank",
+      regex: /\b(?:seabank|sea bank)\b/i,
+    },
+    {
+      name: "DANA",
+      regex: /\b(?:dana)\b/i,
+    },
   ];
 
   let accountName = null;
@@ -64,8 +80,14 @@ export function parseExpense(message) {
 
   let description = text
     .replace(amountMatch[0], "")
-    .replace(/\b(?:dari|pakai|lewat)\b/gi, "")
-    .replace(/\b(?:jago|bank jago|seabank|sea bank|dana)\b/gi, "")
+    .replace(
+      /\b(?:dari|pakai|lewat)\b/gi,
+      ""
+    )
+    .replace(
+      /\b(?:jago|bank jago|seabank|sea bank|dana)\b/gi,
+      ""
+    )
     .trim();
 
   // =========================
@@ -92,6 +114,7 @@ export function parseExpense(message) {
   };
 }
 
+
 export function parseIncome(message) {
   const text = message.trim();
 
@@ -116,11 +139,18 @@ export function parseIncome(message) {
 
   const unit = amountMatch[2]?.toLowerCase();
 
-  if (unit === "k" || unit === "rb" || unit === "ribu") {
+  if (
+    unit === "k" ||
+    unit === "rb" ||
+    unit === "ribu"
+  ) {
     amount *= 1000;
   }
 
-  if (unit === "jt" || unit === "juta") {
+  if (
+    unit === "jt" ||
+    unit === "juta"
+  ) {
     amount *= 1000000;
   }
 
@@ -131,9 +161,18 @@ export function parseIncome(message) {
   // =========================
 
   const accountPatterns = [
-    { name: "Jago", regex: /\b(?:jago|bank jago)\b/i },
-    { name: "SeaBank", regex: /\b(?:seabank|sea bank)\b/i },
-    { name: "DANA", regex: /\b(?:dana)\b/i },
+    {
+      name: "Jago",
+      regex: /\b(?:jago|bank jago)\b/i,
+    },
+    {
+      name: "SeaBank",
+      regex: /\b(?:seabank|sea bank)\b/i,
+    },
+    {
+      name: "DANA",
+      regex: /\b(?:dana)\b/i,
+    },
   ];
 
   let accountName = null;
@@ -145,21 +184,20 @@ export function parseIncome(message) {
     }
   }
 
-  if (!accountName) {
-    return {
-      success: false,
-      error: "Account tidak ditemukan",
-    };
-  }
-
   // =========================
   // DESCRIPTION
   // =========================
 
   let description = text
     .replace(amountMatch[0], "")
-    .replace(/\b(?:masuk|ke|di|dari|pakai|lewat)\b/gi, "")
-    .replace(/\b(?:jago|bank jago|seabank|sea bank|dana)\b/gi, "")
+    .replace(
+      /\b(?:masuk|ke|di|dari|pakai|lewat)\b/gi,
+      ""
+    )
+    .replace(
+      /\b(?:jago|bank jago|seabank|sea bank|dana)\b/gi,
+      ""
+    )
     .trim();
 
   // =========================
@@ -186,6 +224,7 @@ export function parseIncome(message) {
   };
 }
 
+
 export function parseTransfer(message) {
   const text = message.trim();
 
@@ -210,11 +249,18 @@ export function parseTransfer(message) {
 
   const unit = amountMatch[2]?.toLowerCase();
 
-  if (unit === "k" || unit === "rb" || unit === "ribu") {
+  if (
+    unit === "k" ||
+    unit === "rb" ||
+    unit === "ribu"
+  ) {
     amount *= 1000;
   }
 
-  if (unit === "jt" || unit === "juta") {
+  if (
+    unit === "jt" ||
+    unit === "juta"
+  ) {
     amount *= 1000000;
   }
 
@@ -250,12 +296,15 @@ export function parseTransfer(message) {
   if (matchedAccounts.length < 2) {
     return {
       success: false,
-      error: "Account asal dan tujuan tidak lengkap",
+      error:
+        "Account asal dan tujuan tidak lengkap",
     };
   }
 
-  // Untuk format:
-  // dari A ke B
+  // =========================
+  // FROM / TO
+  // =========================
+
   const fromToMatch = text.match(
     /\bdari\s+(jago|bank jago|seabank|sea bank|dana)\s+ke\s+(jago|bank jago|seabank|sea bank|dana)\b/i
   );
@@ -265,7 +314,8 @@ export function parseTransfer(message) {
 
   if (fromToMatch) {
     const normalizeAccount = (name) => {
-      const lower = name.toLowerCase();
+      const lower =
+        name.toLowerCase();
 
       if (
         lower === "jago" ||
@@ -284,16 +334,29 @@ export function parseTransfer(message) {
       if (lower === "dana") {
         return "DANA";
       }
+
+      return null;
     };
 
-    fromAccountName = normalizeAccount(fromToMatch[1]);
-    toAccountName = normalizeAccount(fromToMatch[2]);
+    fromAccountName =
+      normalizeAccount(
+        fromToMatch[1]
+      );
+
+    toAccountName =
+      normalizeAccount(
+        fromToMatch[2]
+      );
   }
 
-  if (!fromAccountName || !toAccountName) {
+  if (
+    !fromAccountName ||
+    !toAccountName
+  ) {
     return {
       success: false,
-      error: "Format transfer harus menyebutkan dari dan ke",
+      error:
+        "Format transfer harus menyebutkan dari dan ke",
     };
   }
 
@@ -303,7 +366,8 @@ export function parseTransfer(message) {
   ) {
     return {
       success: false,
-      error: "Account asal dan tujuan tidak boleh sama",
+      error:
+        "Account asal dan tujuan tidak boleh sama",
     };
   }
 
@@ -341,8 +405,10 @@ export function parseTransfer(message) {
   };
 }
 
+
 export function messageRouter(message) {
-  const text = message.trim().toLowerCase();
+  const text =
+    message.trim().toLowerCase();
 
   if (!text) {
     return {
@@ -357,7 +423,9 @@ export function messageRouter(message) {
 
   if (
     /\b(saldo|balance)\b/i.test(text) ||
-    /\b(yang|punya)\b.*\b(jago|seabank|dana)\b/i.test(text)
+    /\b(yang|punya)\b.*\b(jago|seabank|dana)\b/i.test(
+      text
+    )
   ) {
     return parseQuery(message);
   }
@@ -400,9 +468,11 @@ export function messageRouter(message) {
   return {
     success: false,
     intent: "UNKNOWN",
-    error: "Saya belum mengerti pesan tersebut",
+    error:
+      "Saya belum mengerti pesan tersebut",
   };
 }
+
 
 export function parseQuery(message) {
   const text = message.trim();
@@ -481,6 +551,7 @@ export function parseQuery(message) {
   return {
     success: false,
     intent: "UNKNOWN_QUERY",
-    error: "Query belum dikenali",
+    error:
+      "Query belum dikenali",
   };
 }

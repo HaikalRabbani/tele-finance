@@ -397,3 +397,72 @@ export async function getOrCreateUser(db, telegramUserId, name = null) {
     .bind(result.meta.last_row_id)
     .first();
 }
+
+export async function getConversationState(db, userId) {
+  return await db
+    .prepare(`
+      SELECT
+        id,
+        user_id,
+        state,
+        payload,
+        created_at,
+        updated_at
+      FROM conversation_states
+      WHERE user_id = ?
+    `)
+    .bind(userId)
+    .first();
+}
+
+
+export async function setConversationState(
+  db,
+  userId,
+  state,
+  payload
+) {
+  const payloadJson = JSON.stringify(payload);
+
+  await db
+    .prepare(`
+      INSERT INTO conversation_states (
+        user_id,
+        state,
+        payload
+      )
+      VALUES (?, ?, ?)
+      ON CONFLICT(user_id)
+      DO UPDATE SET
+        state = excluded.state,
+        payload = excluded.payload,
+        updated_at = CURRENT_TIMESTAMP
+    `)
+    .bind(
+      userId,
+      state,
+      payloadJson
+    )
+    .run();
+
+  return await getConversationState(
+    db,
+    userId
+  );
+}
+
+
+export async function clearConversationState(
+  db,
+  userId
+) {
+  await db
+    .prepare(`
+      DELETE FROM conversation_states
+      WHERE user_id = ?
+    `)
+    .bind(userId)
+    .run();
+
+  return true;
+}
